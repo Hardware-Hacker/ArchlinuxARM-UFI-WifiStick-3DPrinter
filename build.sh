@@ -105,6 +105,7 @@ function install_aur_compiledeps_package()
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
     local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
+    local checkdepends=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${checkdepends[@]}')
 
     local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
     # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
@@ -127,6 +128,14 @@ function install_aur_compiledeps_package()
     done
 
 
+    for dep in $checkdepends; do
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            install_aur_compiledeps_package $dep
+        else
+            $chlivedo "pacman --noconfirm -S $dep"
+        fi
+    done
+
     chlivealarmdo "$name" "makepkg -s --noconfirm"
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-$pkgver-*.pkg.tar.xz"
 
@@ -145,6 +154,7 @@ function install_aur_package()
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
     local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
+    local checkdepends=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${checkdepends[@]}')
 
     local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
     # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
@@ -167,6 +177,13 @@ function install_aur_package()
         fi
     done
 
+    for dep in $checkdepends; do
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            install_aur_compiledeps_package $dep
+        else
+            $chlivedo "pacman --noconfirm -S $dep"
+        fi
+    done
 
     chlivealarmdo $name "makepkg -s --noconfirm"
 
