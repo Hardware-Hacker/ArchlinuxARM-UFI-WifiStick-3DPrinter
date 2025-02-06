@@ -107,7 +107,7 @@ function install_aur_compiledeps_package()
     local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
 
     local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
-    local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch}')
+    # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
 
     for dep in $compiledeps; do
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
@@ -128,7 +128,7 @@ function install_aur_compiledeps_package()
 
 
     chlivealarmdo "$name" "makepkg -s --noconfirm"
-    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-$pkgver-*.pkg.tar.xz"
 
     echo "install compiledeps $name finished"
 }
@@ -147,7 +147,7 @@ function install_aur_package()
     local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
 
     local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
-    local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch}')
+    # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
 
     for dep in $compiledeps; do
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
@@ -170,8 +170,8 @@ function install_aur_package()
 
     chlivealarmdo $name "makepkg -s --noconfirm"
 
-    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
-    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-$pkgver-*.pkg.tar.xz"
+    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-$pkgver-*.pkg.tar.xz"
 
     echo "install $name finished"
 }
