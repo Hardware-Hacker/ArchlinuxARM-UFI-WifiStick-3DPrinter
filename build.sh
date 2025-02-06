@@ -187,8 +187,8 @@ function install_aur_package()
 
     chlivealarmdo $name "makepkg -s --noconfirm"
 
-    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-$pkgver-*.pkg.tar.xz"
-    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-$pkgver-*.pkg.tar.xz"
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
+    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
 
     echo "install $name finished"
 }
