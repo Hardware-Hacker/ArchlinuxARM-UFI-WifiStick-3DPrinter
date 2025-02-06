@@ -85,6 +85,16 @@ function chlivealarmdo()
     $chlivedo "$command"
 }
 
+function chlive_path_do() {
+    path=$1
+    command="cd $path; $2"
+    $chlivedo "$command"
+}
+
+function chlive_alarm_path_do() {
+    chlive_path_do '/home/alarm/' "$1"
+}
+
 function install_aur_compiledeps_package()
 {
     echo "install compiledeps $name start"
@@ -118,7 +128,7 @@ function install_aur_compiledeps_package()
 
 
     chlivealarmdo "$name" "makepkg -s --noconfirm"
-    $chlivedo "pacman -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
+    chlive_alarm_path_do "pacman -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
 
     echo "install compiledeps $name finished"
 }
@@ -160,8 +170,8 @@ function install_aur_package()
 
     chlivealarmdo $name "makepkg -s --noconfirm"
 
-    $chlivedo "pacman -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
-    $chlivedo "pacstrap -cGMU /mnt $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
+    chlive_alarm_path_do "pacman -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
+    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
 
     echo "install $name finished"
 }
