@@ -222,9 +222,12 @@ function config_rootfs()
 
     cp -p /usr/bin/qemu-aarch64-static $rootfs/bin/qemu-aarch64-static
     cp -p config/resize2fs.service $rootfs/usr/lib/systemd/system
+
     cp -p config/wifi.nmconnection $rootfs/etc/NetworkManager/system-connections/
     cp -p config/moonraker.conf $rootfs/etc/klipper/
-    cp -p config/klipper.conf $rootfs/etc/klipper/
+
+    # FIXME: support config klipper.conf
+    cp -p  $rootfs/opt/klipper/config/generic-mks-monster8.cfg $rootfs/etc/klipper/klipper.conf
 
     # Configure rootfs
     $chrootdo "useradd -d /home/alarm -m -U alarm"
