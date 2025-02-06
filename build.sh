@@ -124,8 +124,10 @@ function install_aur_compiledeps_package()
 
 function install_aur_package()
 {
-    echo "install $name start"
     local name=$1
+
+    echo "install $name start"
+
     local project_url="https://aur.archlinux.org/$name.git"
 
     chlivealarmdo "" "git clone $project_url $name"
@@ -146,6 +148,8 @@ function install_aur_package()
     for dep in $runtimedeps; do
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_package $dep
+        else
+            $chlivedo "pacman --noconfirm -S $dep"
         fi
     done
 
