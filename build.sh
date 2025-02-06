@@ -76,13 +76,83 @@ function prepare_rootfs()
     mount $rootimg $rootfs
 }
 
+function chlivealarmdo()
+{
+    path=$1
+    chalarm="cd /home/alarm/$path && su alarm -c"
+    command="$chalarm '$2'"
+
+    $chlivedo "$command"
+}
+
+function install_aur_compiledeps_package()
+{
+    echo "install compiledeps $name start"
+    local name=$1
+    local project_url="https://aur.archlinux.org/$name.git"
+
+    chlivealarmdo "git clone $project_url $name"
+
+    local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
+    local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
+
+    
+    local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
+    local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch}')
+
+    
+    
+    for dep in $compiledeps; do
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            install_aur_compiledeps_package $dep
+        fi
+    done
+
+
+    for dep in $runtimedeps; do
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            install_aur_compiledeps_package $dep
+        fi
+    done
+        
+
+    chlivealarmdo "$name" "makepkg -si --noconfirm"
+
+    echo "install compiledeps $name finished" 
+}
+
 function install_aur_package()
 {
+    echo "install $name start"
     local name=$1
-    local url="https://aur.archlinux.org/$name.git"
-    $chlivedo "cd /home/alarm && su alarm -c \"git clone $url $name\""
-    $chlivedo "cd /home/alarm/$name && su alarm -c \"makepkg -s\""
-    $chlivedo "cd /home/alarm/$name && pacstrap -cGMU /mnt ./*.tar.zst"
+    local project_url="https://aur.archlinux.org/$name.git"
+
+    chlivealarmdo "" "git clone $project_url $name"
+
+    local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
+    local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
+
+    local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
+    local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch}')
+    
+    for dep in $compiledeps; do
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            install_aur_compiledeps_package $dep
+        fi
+    done
+
+
+    for dep in $runtimedeps; do
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            install_aur_package $dep
+        fi
+    done
+        
+
+    chlivealarmdo $name "makepkg -si --noconfirm"
+    chlivealarmdo "$name" "pacstrap -cGMU /mnt $name-$pkgver-$pkgarch.pkg.tar.zst"
+
+    echo "install $name finished"
 }
 
 function config_rootfs()

@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -37,7 +37,7 @@ jobs:
         run: git submodule update --init --depth=1
 
       - name: Build packets
-        run: sudo bash ${{github.workspace}}/build.sh
+        run: sudo bash -x ${{github.workspace}}/build.sh
       
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
@@ -77,3 +77,6 @@ jobs:
         with:
           keep_latest: 1
           delete_tags: true
+      - name: debug
+        if: ${{ failure() }}
+        uses: csexton/debugger-action@master
