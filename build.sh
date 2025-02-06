@@ -117,7 +117,8 @@ function install_aur_compiledeps_package()
     done
 
 
-    chlivealarmdo "$name" "makepkg -si --noconfirm"
+    chlivealarmdo "$name" "makepkg -s --noconfirm"
+    $chlivedo "pacman -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
 
     echo "install compiledeps $name finished"
 }
@@ -157,8 +158,10 @@ function install_aur_package()
     done
 
 
-    chlivealarmdo $name "makepkg -si --noconfirm"
-    chlivealarmdo "$name" "pacstrap -cGMU /mnt $name-$pkgver-$pkgarch.pkg.tar.zst"
+    chlivealarmdo $name "makepkg -s --noconfirm"
+
+    $chlivedo "pacman -U $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
+    $chlivedo "pacstrap -cGMU /mnt $name/$name-$pkgver-$pkgarch.pkg.tar.xz"
 
     echo "install $name finished"
 }
