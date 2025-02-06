@@ -141,6 +141,8 @@ function install_aur_package()
     for dep in $compiledeps; do
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_compiledeps_package $dep
+        else
+            $chlivedo "pacman --noconfirm -S $dep"
         fi
     done
 
@@ -150,6 +152,7 @@ function install_aur_package()
             install_aur_package $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
+            $chlivedo "pacstrap -cGM /mnt $dep"
         fi
     done
 
