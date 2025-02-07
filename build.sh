@@ -95,10 +95,47 @@ function chlive_alarm_path_do() {
     chlive_path_do '/home/alarm/' "$1"
 }
 
-function install_aur_compiledeps_package()
+function install_aur_package_live_cache() {
+    echo "install(cache) to live $name start"
+
+    chlive_alarm_path_do "ls $name/$name-*-*.pkg.tar.xz"
+    if [ $? -ne 0 ]; then
+        echo "install(cache) no found this pkg"
+        return 1
+    fi
+
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
+
+    echo "install(cache) to live $name finshied"
+    return 0
+}
+
+function install_aur_package_rootfs_cache() {
+    echo "install(cache) to rootfs $name start"
+
+    chlive_alarm_path_do "ls $name/$name-*-*.pkg.tar.xz"
+    if [ $? -ne 0 ]; then
+        echo "install(cache) no found this pkg"
+        return 1
+    fi
+
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
+    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
+
+    echo "install(cache) to rootfs $name finshied"
+}
+
+function build_aur_package_live()
 {
-    echo "install compiledeps $name start"
     local name=$1
+    echo "build compiledeps $name start"
+
+    install_aur_package_live_cache $name
+    if [ $? -eq 0 ]; then
+        echo "install(cache) to live $name ok"
+        return 0
+    fi
+
     local project_url="https://aur.archlinux.org/$name.git"
 
     chlivealarmdo "" "git clone $project_url $name"
@@ -116,7 +153,7 @@ function install_aur_compiledeps_package()
         fi
 
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
+            build_aur_package_live $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
         fi
@@ -129,7 +166,7 @@ function install_aur_compiledeps_package()
         fi
 
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
+            build_aur_package_live $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
         fi
@@ -142,7 +179,7 @@ function install_aur_compiledeps_package()
         fi
 
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
+            build_aur_package_live $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
         fi
@@ -151,14 +188,20 @@ function install_aur_compiledeps_package()
     chlivealarmdo "$name" "makepkg -s --noconfirm"
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
 
-    echo "install compiledeps $name finished"
+    echo "build compiledeps $name finished"
 }
 
-function install_aur_package()
+function build_aur_package_rootfs()
 {
     local name=$1
 
     echo "install $name start"
+
+    install_aur_package_live_cache $name
+    if [ $? ]; then
+        echo "install(cache) to rootfs $name ok"
+        return 0
+    fi
 
     local project_url="https://aur.archlinux.org/$name.git"
 
@@ -177,7 +220,7 @@ function install_aur_package()
         fi
 
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
+            build_aur_package_live $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
         fi
@@ -190,7 +233,7 @@ function install_aur_package()
         fi
 
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_package $dep
+            build_aur_package_rootfs $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
             $chlivedo "pacstrap -cGM /mnt $dep"
@@ -203,7 +246,7 @@ function install_aur_package()
         fi
 
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
+            build_aur_package_live $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
         fi
@@ -237,7 +280,7 @@ function config_rootfs()
     done
 
     for package in $(cat config/*.aur.conf); do
-        install_aur_package $package
+        build_aur_package_rootfs $package
     done
 
     $chlivedo "echo 'alarm' > /mnt/etc/hostname"
