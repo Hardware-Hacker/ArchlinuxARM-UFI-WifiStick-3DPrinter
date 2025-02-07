@@ -223,7 +223,6 @@ function config_rootfs()
     cp -p /usr/bin/qemu-aarch64-static $rootfs/bin/qemu-aarch64-static
     cp -p config/resize2fs.service $rootfs/usr/lib/systemd/system
 
-    cp -p config/wifi.nmconnection $rootfs/etc/NetworkManager/system-connections/
     cp -p config/moonraker.conf $rootfs/etc/klipper/
     cp -p config/nginx.conf $rootfs/etc/nginx/
 
