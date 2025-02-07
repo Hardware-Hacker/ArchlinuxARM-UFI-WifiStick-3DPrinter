@@ -111,6 +111,10 @@ function install_aur_compiledeps_package()
     # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
 
     for dep in $compiledeps; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_compiledeps_package $dep
         else
@@ -120,6 +124,10 @@ function install_aur_compiledeps_package()
 
 
     for dep in $runtimedeps; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_compiledeps_package $dep
         else
@@ -129,6 +137,10 @@ function install_aur_compiledeps_package()
 
 
     for dep in $checkdepends; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_compiledeps_package $dep
         else
@@ -160,6 +172,10 @@ function install_aur_package()
     # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
 
     for dep in $compiledeps; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_compiledeps_package $dep
         else
@@ -169,6 +185,10 @@ function install_aur_package()
 
 
     for dep in $runtimedeps; do
+        if $chrootdo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_package $dep
         else
@@ -178,6 +198,10 @@ function install_aur_package()
     done
 
     for dep in $checkdepends; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
             install_aur_compiledeps_package $dep
         else
