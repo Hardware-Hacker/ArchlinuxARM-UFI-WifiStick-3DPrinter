@@ -38,11 +38,11 @@ jobs:
 
       - name: Build packets
         run: sudo bash -x ${{github.workspace}}/build.sh
-      
+
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: 3dprinter-archlinux-wifistick-${{github.run_id}}-${{github.sha}}
           path: |
             ${{github.workspace}}/build/aboot.img
             ${{github.workspace}}/build/boot.img
@@ -50,7 +50,6 @@ jobs:
             ${{github.workspace}}/build/aboot.img.sha256sum
             ${{github.workspace}}/build/boot.img.sha256sum
             ${{github.workspace}}/build/rootfs.img.zst.sha256sum
-            ${{github.workspace}}/linux/arch/arm64/boot/Image.gz
       - name: Create release
         uses: softprops/action-gh-release@v1
         if: github.ref == 'refs/heads/master'
