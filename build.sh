@@ -225,6 +225,7 @@ function config_rootfs()
 
     cp -p config/wifi.nmconnection $rootfs/etc/NetworkManager/system-connections/
     cp -p config/moonraker.conf $rootfs/etc/klipper/
+    cp -p config/nginx.conf $rootfs/etc/nginx/
 
     # FIXME: support config klipper.conf
     cp -p  $rootfs/opt/klipper/config/generic-mks-monster8.cfg $rootfs/etc/klipper/klipper.conf
