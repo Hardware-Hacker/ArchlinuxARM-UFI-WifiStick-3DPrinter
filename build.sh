@@ -95,6 +95,17 @@ function chlive_alarm_path_do() {
     chlive_path_do '/home/alarm/' "$1"
 }
 
+function 3dprinter_connect_wifi() {
+    local wifi_name="$1"
+    local wifi_password="$2"
+
+    $chrootdo "nmcli connection add type wifi con-name $wifi_name ifname wlan0 ssid $wifi_name"
+    $chrootdo "nmcli connection add type wifi con-name $wifi_name ifname wlan0 ssid $wifi_name"
+    $chrootdo "nmcli connection modify $wifi_name wifi-sec.key-mgmt wpa-psk"
+    $chrootdo "nmcli connection modify $wifi_name wifi-sec.psk $wifi_password"
+    $chrootdo "nmcli connection modify $wifi_name connection.autoconnect yes"
+}
+
 function install_aur_compiledeps_package()
 {
     echo "install compiledeps $name start"
@@ -228,6 +239,7 @@ function config_rootfs()
 
     # FIXME: support config klipper.conf
     cp -p  $rootfs/opt/klipper/config/generic-mks-monster8.cfg $rootfs/etc/klipper/klipper.conf
+    3dprinter_connect_wifi alarm password
 
     # Configure rootfs
     $chrootdo "useradd -d /home/alarm -m -U alarm"
