@@ -101,7 +101,7 @@ function install_aur_compiledeps_package()
     local name=$1
     local project_url="https://aur.archlinux.org/$name.git"
 
-    chlivealarmdo "git clone $project_url $name"
+    chlivealarmdo "" "git clone $project_url $name"
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
     local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
