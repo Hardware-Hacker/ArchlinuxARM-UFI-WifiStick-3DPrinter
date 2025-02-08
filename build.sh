@@ -96,45 +96,38 @@ function chlive_alarm_path_do() {
 }
 
 function install_aur_package_live_cache() {
-    echo "install(cache) to live $name start"
-
     result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
     if [[ "$result" =~ "No such file or directory" ]]; then
-        echo "install(cache) no found $name"
-        return 1
+        echo -n "false"
+        return
     fi
 
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
 
-    echo "install(cache) to live $name finshied"
-    return 0
+    echo -n "true"
 }
 
 function install_aur_package_rootfs_cache() {
-    echo "install(cache) to rootfs $name start"
-
     result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
     if [[ "$result" =~ "No such file or directory" ]]; then
-        echo "install(cache) no found $name"
-        return 1
+        echo -n "false"
+        return
     fi
 
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
     chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
 
-    echo "install(cache) to rootfs $name finshied"
+    echo -n "true"
     return 0
 }
 
 function build_aur_package_live()
 {
     local name=$1
-    echo "build aur packaege to live $name start"
-
-    install_aur_package_live_cache $name
-    if [ $? -eq 0 ]; then
-        echo "install(cache) to live $name ok"
-        return 0
+    result=`install_aur_package_live_cache $name`
+    if [[ "$result" =~ "true" ]]; then
+        echo "install(cache) $name to live ok"
+        return
     fi
 
     local project_url="https://aur.archlinux.org/$name.git"
@@ -198,10 +191,10 @@ function build_aur_package_rootfs()
 
     echo "build aur packaege to rootfs $name start"
 
-    install_aur_package_rootfs_cache $name
-    if [ $? -eq 0 ]; then
-        echo "install(cache) to rootfs $name ok"
-        return 0
+    result=`install_aur_package_rootfs_cache $name`
+    if [[ "$result" =~ "true" ]]; then
+        echo "install(cache) $name to rootfs ok"
+        return
     fi
 
     local project_url="https://aur.archlinux.org/$name.git"
@@ -328,7 +321,7 @@ function generate_checksum()
     sha256sum $rootimg.zst > $rootimg.zst.sha256sum
 }
 
-set -v
+set -ev
 mkdir -p build
 prepare_livecd
 prepare_rootfs
