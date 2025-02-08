@@ -98,9 +98,9 @@ function chlive_alarm_path_do() {
 function install_aur_package_live_cache() {
     echo "install(cache) to live $name start"
 
-    chlive_alarm_path_do "ls $name/$name-*-*.pkg.tar.xz"
-    if [ $? -ne 0 ]; then
-        echo "install(cache) no found this pkg"
+    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        echo "install(cache) no found $name"
         return 1
     fi
 
@@ -113,9 +113,9 @@ function install_aur_package_live_cache() {
 function install_aur_package_rootfs_cache() {
     echo "install(cache) to rootfs $name start"
 
-    chlive_alarm_path_do "ls $name/$name-*-*.pkg.tar.xz"
-    if [ $? -ne 0 ]; then
-        echo "install(cache) no found this pkg"
+    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        echo "install(cache) no found $name"
         return 1
     fi
 
@@ -123,12 +123,13 @@ function install_aur_package_rootfs_cache() {
     chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
 
     echo "install(cache) to rootfs $name finshied"
+    return 0
 }
 
 function build_aur_package_live()
 {
     local name=$1
-    echo "build compiledeps $name start"
+    echo "build aur packaege to live $name start"
 
     install_aur_package_live_cache $name
     if [ $? -eq 0 ]; then
@@ -188,17 +189,17 @@ function build_aur_package_live()
     chlivealarmdo "$name" "makepkg -s --noconfirm"
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
 
-    echo "build compiledeps $name finished"
+    echo "build aur packaege $name to live finished"
 }
 
 function build_aur_package_rootfs()
 {
     local name=$1
 
-    echo "install $name start"
+    echo "build aur packaege to rootfs $name start"
 
-    install_aur_package_live_cache $name
-    if [ $? ]; then
+    install_aur_package_rootfs_cache $name
+    if [ $? -eq 0 ]; then
         echo "install(cache) to rootfs $name ok"
         return 0
     fi
@@ -257,7 +258,7 @@ function build_aur_package_rootfs()
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
     chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
 
-    echo "install $name finished"
+    echo "build aur packaege to rootfs $name finished"
 }
 
 function config_rootfs()
@@ -327,7 +328,7 @@ function generate_checksum()
     sha256sum $rootimg.zst > $rootimg.zst.sha256sum
 }
 
-set -ev
+set -v
 mkdir -p build
 prepare_livecd
 prepare_rootfs
