@@ -151,7 +151,11 @@ function build_aur_package_live()
         fi
     done
 
-    chlivealarmdo "$name" "makepkg -s --noconfirm"
+    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        chlivealarmdo "$name" "makepkg -s --noconfirm"
+    fi
+
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
 
     echo "build aur packaege $name to live finished"
@@ -214,7 +218,10 @@ function build_aur_package_rootfs()
         fi
     done
 
-    chlivealarmdo $name "makepkg -s --noconfirm"
+    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        chlivealarmdo "$name" "makepkg -s --noconfirm"
+    fi
 
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
     chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
