@@ -95,44 +95,16 @@ function chlive_alarm_path_do() {
     chlive_path_do '/home/alarm/' "$1"
 }
 
-function install_aur_package_live_cache() {
-    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
-    if [[ "$result" =~ "No such file or directory" ]]; then
-        echo -n "false"
-        return
-    fi
-
-    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
-
-    echo -n "true"
-}
-
-function install_aur_package_rootfs_cache() {
-    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
-    if [[ "$result" =~ "No such file or directory" ]]; then
-        echo -n "false"
-        return
-    fi
-
-    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
-    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
-
-    echo -n "true"
-    return 0
-}
-
 function build_aur_package_live()
 {
     local name=$1
-    result=`install_aur_package_live_cache $name`
-    if [[ "$result" =~ "true" ]]; then
-        echo "install(cache) $name to live ok"
-        return
-    fi
-
     local project_url="https://aur.archlinux.org/$name.git"
 
-    chlivealarmdo "" "git clone $project_url $name"
+    result=`chlive_alarm_path_do "file $name"`
+
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        chlivealarmdo "" "git clone $project_url $name"
+    fi
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
     local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
@@ -188,18 +160,14 @@ function build_aur_package_live()
 function build_aur_package_rootfs()
 {
     local name=$1
-
-    echo "build aur packaege to rootfs $name start"
-
-    result=`install_aur_package_rootfs_cache $name`
-    if [[ "$result" =~ "true" ]]; then
-        echo "install(cache) $name to rootfs ok"
-        return
-    fi
-
     local project_url="https://aur.archlinux.org/$name.git"
 
-    chlivealarmdo "" "git clone $project_url $name"
+    echo "build aur packaege $name to rootfs start"
+
+    result=`chlive_alarm_path_do "file $name"`
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        chlivealarmdo "" "git clone $project_url $name"
+    fi
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
     local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
@@ -251,7 +219,7 @@ function build_aur_package_rootfs()
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
     chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
 
-    echo "build aur packaege to rootfs $name finished"
+    echo "build aur packaege $name to rootfs finished"
 }
 
 function config_rootfs()
