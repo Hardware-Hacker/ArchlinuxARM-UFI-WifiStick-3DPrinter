@@ -95,69 +95,47 @@ function chlive_alarm_path_do() {
     chlive_path_do '/home/alarm/' "$1"
 }
 
-function 3dprinter_connect_wifi() {
-    local wifi_name="$1"
-    local wifi_password="$2"
+function install_aur_package_live_cache() {
+    echo "install(cache) to live $name start"
 
-    $chrootdo "nmcli connection add type wifi con-name $wifi_name ifname wlan0 ssid $wifi_name"
-    $chrootdo "nmcli connection add type wifi con-name $wifi_name ifname wlan0 ssid $wifi_name"
-    $chrootdo "nmcli connection modify $wifi_name wifi-sec.key-mgmt wpa-psk"
-    $chrootdo "nmcli connection modify $wifi_name wifi-sec.psk $wifi_password"
-    $chrootdo "nmcli connection modify $wifi_name connection.autoconnect yes"
+    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        echo "install(cache) no found $name"
+        return 1
+    fi
+
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
+
+    echo "install(cache) to live $name finshied"
+    return 0
 }
 
-function install_aur_compiledeps_package()
-{
-    echo "install compiledeps $name start"
-    local name=$1
-    local project_url="https://aur.archlinux.org/$name.git"
+function install_aur_package_rootfs_cache() {
+    echo "install(cache) to rootfs $name start"
 
-    chlivealarmdo "git clone $project_url $name"
+    result=`chlive_alarm_path_do "file $name/$name-*-*.pkg.tar.xz"`
+    if [[ "$result" =~ "No such file or directory" ]]; then
+        echo "install(cache) no found $name"
+        return 1
+    fi
 
-    local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
-    local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
-    local checkdepends=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${checkdepends[@]}')
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
+    chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
 
-    local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
-    # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
-
-    for dep in $compiledeps; do
-        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
-        else
-            $chlivedo "pacman --noconfirm -S $dep"
-        fi
-    done
-
-
-    for dep in $runtimedeps; do
-        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
-        else
-            $chlivedo "pacman --noconfirm -S $dep"
-        fi
-    done
-
-
-    for dep in $checkdepends; do
-        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
-        else
-            $chlivedo "pacman --noconfirm -S $dep"
-        fi
-    done
-
-    chlivealarmdo "$name" "makepkg -s --noconfirm"
-    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-$pkgver-*.pkg.tar.xz"
-
-    echo "install compiledeps $name finished"
+    echo "install(cache) to rootfs $name finshied"
+    return 0
 }
 
-function install_aur_package()
+function build_aur_package_live()
 {
     local name=$1
+    echo "build aur packaege to live $name start"
 
-    echo "install $name start"
+    install_aur_package_live_cache $name
+    if [ $? -eq 0 ]; then
+        echo "install(cache) to live $name ok"
+        return 0
+    fi
 
     local project_url="https://aur.archlinux.org/$name.git"
 
@@ -171,8 +149,12 @@ function install_aur_package()
     # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
 
     for dep in $compiledeps; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
+            build_aur_package_live $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
         fi
@@ -180,8 +162,79 @@ function install_aur_package()
 
 
     for dep in $runtimedeps; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_package $dep
+            build_aur_package_live $dep
+        else
+            $chlivedo "pacman --noconfirm -S $dep"
+        fi
+    done
+
+
+    for dep in $checkdepends; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            build_aur_package_live $dep
+        else
+            $chlivedo "pacman --noconfirm -S $dep"
+        fi
+    done
+
+    chlivealarmdo "$name" "makepkg -s --noconfirm"
+    chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
+
+    echo "build aur packaege $name to live finished"
+}
+
+function build_aur_package_rootfs()
+{
+    local name=$1
+
+    echo "build aur packaege to rootfs $name start"
+
+    install_aur_package_rootfs_cache $name
+    if [ $? ]; then
+        echo "install(cache) to rootfs $name ok"
+        return 0
+    fi
+
+    local project_url="https://aur.archlinux.org/$name.git"
+
+    chlivealarmdo "" "git clone $project_url $name"
+
+    local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
+    local compiledeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${makedepends[@]}')
+    local checkdepends=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${checkdepends[@]}')
+
+    local pkgver=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${pkgver}-${pkgrel}')
+    # local pkgarch=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${arch[@]}')
+
+    for dep in $compiledeps; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            build_aur_package_live $dep
+        else
+            $chlivedo "pacman --noconfirm -S $dep"
+        fi
+    done
+
+
+    for dep in $runtimedeps; do
+        if $chrootdo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
+        if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
+            build_aur_package_rootfs $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
             $chlivedo "pacstrap -cGM /mnt $dep"
@@ -189,8 +242,12 @@ function install_aur_package()
     done
 
     for dep in $checkdepends; do
+        if $chlivedo "pacman -Qi $dep >/dev/null 2>&1"; then
+            continue;
+        fi
+
         if ! $chlivedo "pacman -Si $dep >/dev/null 2>&1"; then
-            install_aur_compiledeps_package $dep
+            build_aur_package_live $dep
         else
             $chlivedo "pacman --noconfirm -S $dep"
         fi
@@ -201,7 +258,7 @@ function install_aur_package()
     chlive_alarm_path_do "pacman --noconfirm -U $name/$name-*-*.pkg.tar.xz"
     chlive_alarm_path_do "pacstrap -cGMU /mnt $name/$name-*-*.pkg.tar.xz"
 
-    echo "install $name finished"
+    echo "build aur packaege to rootfs $name finished"
 }
 
 function config_rootfs()
@@ -224,7 +281,7 @@ function config_rootfs()
     done
 
     for package in $(cat config/*.aur.conf); do
-        install_aur_package $package
+        build_aur_package_rootfs $package
     done
 
     $chlivedo "echo 'alarm' > /mnt/etc/hostname"
@@ -239,7 +296,6 @@ function config_rootfs()
 
     # FIXME: support config klipper.conf
     cp -p  $rootfs/opt/klipper/config/generic-mks-monster8.cfg $rootfs/etc/klipper/klipper.conf
-    3dprinter_connect_wifi alarm password
 
     # Configure rootfs
     $chrootdo "useradd -d /home/alarm -m -U alarm"
@@ -272,7 +328,7 @@ function generate_checksum()
     sha256sum $rootimg.zst > $rootimg.zst.sha256sum
 }
 
-set -ev
+set -v
 mkdir -p build
 prepare_livecd
 prepare_rootfs
