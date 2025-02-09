@@ -95,9 +95,11 @@ function chlive_alarm_path_do() {
     chlive_path_do '/home/alarm/' "$1"
 }
 
+
 function build_aur_package_live()
 {
     local name=$1
+    
     local project_url="https://aur.archlinux.org/$name.git"
 
     result=`chlive_alarm_path_do "file $name"`
@@ -171,6 +173,7 @@ function build_aur_package_rootfs()
     result=`chlive_alarm_path_do "file $name"`
     if [[ "$result" =~ "No such file or directory" ]]; then
         chlivealarmdo "" "git clone $project_url $name"
+
     fi
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
@@ -296,7 +299,7 @@ function generate_checksum()
     sha256sum $rootimg.zst > $rootimg.zst.sha256sum
 }
 
-set -ev
+set -v
 mkdir -p build
 prepare_livecd
 prepare_rootfs
