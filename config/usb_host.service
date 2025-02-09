@@ -1,0 +1,12 @@
+[Unit]
+Description=Open usb host mode
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -c "echo host > /sys/class/usb_role/ci_hdrc.0-role-switch/role"
+
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

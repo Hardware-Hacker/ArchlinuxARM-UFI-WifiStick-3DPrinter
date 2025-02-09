@@ -99,7 +99,7 @@ function chlive_alarm_path_do() {
 function build_aur_package_live()
 {
     local name=$1
-    
+
     local project_url="https://aur.archlinux.org/$name.git"
 
     result=`chlive_alarm_path_do "file $name"`
@@ -267,6 +267,8 @@ function config_rootfs()
 
     # FIXME: support config klipper.conf
     cp -p  $rootfs/opt/klipper/config/generic-mks-monster8.cfg $rootfs/etc/klipper/klipper.conf
+
+    cp -p config/usb_host.service $rootfs/usr/lib/systemd/system
 
     # Configure rootfs
     $chrootdo "useradd -d /home/alarm -m -U alarm"
