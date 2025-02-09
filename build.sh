@@ -99,7 +99,7 @@ function chlive_alarm_path_do() {
 function build_aur_package_live()
 {
     local name=$1
-    
+
     local project_url="https://aur.archlinux.org/$name.git"
 
     result=`chlive_alarm_path_do "file $name"`
@@ -173,7 +173,6 @@ function build_aur_package_rootfs()
     result=`chlive_alarm_path_do "file $name"`
     if [[ "$result" =~ "No such file or directory" ]]; then
         chlivealarmdo "" "git clone $project_url $name"
-
     fi
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
@@ -255,7 +254,7 @@ function config_rootfs()
         build_aur_package_rootfs $package
     done
 
-    $chlivedo "echo 'alarm' > /mnt/etc/hostname"
+    $chlivedo "echo '3dprinter' > /mnt/etc/hostname"
     $chlivedo "echo 'LANG=C'> /mnt/etc/locale.conf"
     $chlivedo "echo -n > /mnt/etc/machine-id"
 
@@ -265,8 +264,9 @@ function config_rootfs()
     cp -p config/moonraker.conf $rootfs/etc/klipper/
     cp -p config/nginx.conf $rootfs/etc/nginx/
 
-    # FIXME: support config klipper.conf
-    cp -p  $rootfs/opt/klipper/config/generic-mks-monster8.cfg $rootfs/etc/klipper/klipper.conf
+    cp -p  config/klipper.conf $rootfs/etc/klipper/klipper.conf
+
+    cp -p config/usb_host.service $rootfs/usr/lib/systemd/system
 
     # Configure rootfs
     $chrootdo "useradd -d /home/alarm -m -U alarm"
@@ -299,7 +299,7 @@ function generate_checksum()
     sha256sum $rootimg.zst > $rootimg.zst.sha256sum
 }
 
-set -v
+set -ev
 mkdir -p build
 prepare_livecd
 prepare_rootfs
