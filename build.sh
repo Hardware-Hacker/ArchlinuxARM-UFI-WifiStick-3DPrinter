@@ -264,8 +264,7 @@ function config_rootfs()
     cp -p config/moonraker.conf $rootfs/etc/klipper/
     cp -p config/nginx.conf $rootfs/etc/nginx/
 
-    # FIXME: support config klipper.conf
-    cp -p  $rootfs/opt/klipper/config/generic-mks-monster8.cfg $rootfs/etc/klipper/klipper.conf
+    cp -p  config/klipper.conf $rootfs/etc/klipper/klipper.conf
 
     cp -p config/usb_host.service $rootfs/usr/lib/systemd/system
 
