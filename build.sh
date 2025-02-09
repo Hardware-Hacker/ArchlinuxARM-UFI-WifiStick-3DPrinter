@@ -254,7 +254,7 @@ function config_rootfs()
         build_aur_package_rootfs $package
     done
 
-    $chlivedo "echo 'alarm' > /mnt/etc/hostname"
+    $chlivedo "echo '3dprinter' > /mnt/etc/hostname"
     $chlivedo "echo 'LANG=C'> /mnt/etc/locale.conf"
     $chlivedo "echo -n > /mnt/etc/machine-id"
 
