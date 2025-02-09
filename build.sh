@@ -173,7 +173,6 @@ function build_aur_package_rootfs()
     result=`chlive_alarm_path_do "file $name"`
     if [[ "$result" =~ "No such file or directory" ]]; then
         chlivealarmdo "" "git clone $project_url $name"
-
     fi
 
     local runtimedeps=$(chlivealarmdo "$name" 'source PKGBUILD && echo ${depends[@]}')
@@ -301,7 +300,7 @@ function generate_checksum()
     sha256sum $rootimg.zst > $rootimg.zst.sha256sum
 }
 
-set -v
+set -ev
 mkdir -p build
 prepare_livecd
 prepare_rootfs
